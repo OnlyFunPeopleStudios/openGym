@@ -768,6 +768,13 @@ export default function Stats() {
           : t('Waist, arms, body fat and anything else you measure, each with its own curve.')}</div></div>
       <Button size="sm" variant="tinted" trailingIcon="chevronRight" style={{ flexShrink: 0 }} onClick={() => nav('/measurements')}>{t('Open')}</Button>
     </div>
+    <div className="card row between" style={{ alignItems: 'center', gap: 12 }}>
+      <div style={{ minWidth: 0 }}><h2 style={{ margin: 0 }}>{t('Meals')}</h2>
+        <div className="muted small" style={{ marginTop: 4 }}>{(S.meals || []).length
+          ? t('Last meal {0}', fmtDate((S.meals || []).slice().sort((a,b) => (a.d < b.d ? -1 : 1)).slice(-1)[0].d, true))
+          : t('Log what you eat, with calories and protein.')}</div></div>
+      <Button size="sm" variant="tinted" trailingIcon="chevronRight" style={{ flexShrink: 0 }} onClick={() => nav('/meals')}>{t('Open')}</Button>
+    </div>
     {(hasEffort(S) || hasEstimableEffort(S)) && <EffortCard S={S} />}
 
     <div className="cols">
