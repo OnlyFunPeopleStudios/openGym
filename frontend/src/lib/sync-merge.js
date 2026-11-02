@@ -176,6 +176,17 @@ export function mergeBodyweight(a = [], b = []) {
   return [...byDay.values()].sort((x, y) => (x.d < y.d ? -1 : 1))
 }
 
+export function mergeMeals(a = [], b = []) {
+  const byId = new Map()
+  for (const e of [...list(a), ...list(b)]) {
+    if (!e || e.id == null) continue
+    const cur = byId.get(e.id)
+    if (!cur || (e.t || 0) > (cur.t || 0)) byId.set(e.id, e)
+  }
+  const idless = [...list(a), ...list(b)].filter(e => e && e.id == null)
+  return [...byId.values(), ...idless].sort((x, y) => (x.d < y.d ? -1 : x.d > y.d ? 1 : (x.t || 0) - (y.t || 0)))
+}
+
 // The kept load per exercise. "The larger one wins" held while the app only ever raised it —
 // but an assistance machine progresses downwards, so there the smaller number is the newer,
 // harder setting and taking the larger would hand back the help the other device just dropped
@@ -479,7 +490,7 @@ const workoutTime = w => Number(w?._ts) || Number(w?.end) || Number(w?.start) ||
 const bodyweightKey = e => `${e?.d}|${e?.t ?? ''}`
 const RESET_LISTS = {
   workouts: workoutKey, routines: x => x?.id, customEx: x => x?.id, bodyweight: bodyweightKey,
-  measurements: bodyweightKey, gymCards: x => x?.id, equipProfiles: x => x?.id, favEx: x => x,
+  measurements: bodyweightKey, meals: x => x?.id, gymCards: x => x?.id, equipProfiles: x => x?.id, favEx: x => x,
 }
 const RESET_MAPS = ['exNotes', 'barWeights', 'exAliases', ...STAMPED_MAPS]
 /** An entry's name in resetIds: a workout's id (or day and start), a weigh-in's day and time, … */
@@ -535,6 +546,7 @@ export function sinceReset(S, at, ids) {
     out.customEx = list(S.customEx).filter(c => c && after(c._ts))
     out.bodyweight = list(S.bodyweight).filter(e => e && after(e.t))
     out.measurements = list(S.measurements).filter(e => e && after(e.t))
+out.meals = list(S.meals).filter(e => e && after(e.t))
     // No time of their own: taken for what they were before the reset, which cleared them.
     out.equipProfiles = []
     out.gymCards = []
@@ -907,6 +919,7 @@ export function mergeStates(a0, b0, { prefer } = {}) {
   out.bodyweight = mergeBodyweight(n.bodyweight, o.bodyweight).map(clone)
   // A day's body measurements are one check-in, kept and merged the way a weigh-in is.
   if (list(n.measurements).length || list(o.measurements).length) out.measurements = mergeBodyweight(n.measurements, o.measurements).map(clone)
+if (list(n.meals).length || list(o.meals).length) out.meals = mergeMeals(n.meals, o.meals).map(clone)
   if (list(n.favEx).length || list(o.favEx).length) out.favEx = [...new Set([...list(n.favEx), ...list(o.favEx)])]
   // What either device removed stays removed (the `deleted` section above). A workout taken out
   // this way leaves its exercises' kept loads to be read again, as an edit of it would: from the
